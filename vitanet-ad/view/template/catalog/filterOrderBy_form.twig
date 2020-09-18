@@ -1,0 +1,140 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="pull-right">
+        <button type="submit" form="form-filter" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa fa-save"></i></button>
+        <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a></div>
+      <h1>Products Order By</h1>
+      
+    </div>
+  </div>
+  <div class="container-fluid"> {% if error_warning %}
+    <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-pencil"></i>[{{ filter_id }}] {{ filters[0].filterName }}</h3>
+      </div>
+      <div class="panel-body">
+        <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-filter" class="form-horizontal">
+  
+          <fieldset id="option-value">
+            <legend>{{ text_value }}</legend>
+            <table id="filter" class="table table-striped table-bordered table-hover">
+              <thead>
+                <tr>
+                  <td class="text-left">Code</td>
+				  <td class="text-right">Name</td>
+                  <td class="text-right">Order By</td>
+                  <td class="text-right"></td>
+                </tr>
+              </thead>
+              <tbody>
+               <input type="hidden" name="filter_id" value="{{ filter_id }}"/>
+              {% set filter_row = 0 %}
+              {% for filter in filters %}
+              <tr id="filter-row{{ filter_row }}">
+                <td class="text-left">
+                  <input type="text" name="filter[{{ filter_row }}][productCode]" value="{{ filter.productCode }}" placeholder="Κωδικός Είδους" id="input-sort-order" class="form-control" readonly />
+                </td>
+                <td class="text-left">
+                  <input type="text" name="filter[{{ filter_row }}][productName]" value="{{ filter.productName }}" placeholder=" Είδος" id="input-sort-order" class="form-control" readonly />
+                </td>
+                <td class="text-left">
+                  <input type="text" name="filter[{{ filter_row }}][sort_order]" value="{{ filter.sort_order }}" placeholder=" Είδος" id="input-sort-order" class="form-control" />
+				  <input type="hidden" name="filter[{{ filter_row }}][filter_id]" value="{{ filter.filter_id }}"/>
+				  <input type="hidden" name="filter[{{ filter_row }}][product_id]" value="{{ filter.product_id }}"/>
+                </td>
+				<td class="text-right">
+					<button type="button" onclick="$('#filter-row{{ filter_row }}').remove();" data-toggle="tooltip" title="{{ button_remove }}" class="btn btn-danger"><i class="fa fa-minus-circle"></i></button>
+				</td>  
+              </tr>
+
+              {% set filter_row = filter_row + 1 %}
+              {% endfor %}
+	
+                </tbody>
+              
+				
+              <tfoot>
+                <tr>
+                  <td colspan="3"></td>
+                  <td class="text-right">
+					 <input type="text" alt="1" title="1" name="ac" value="" autocomplete="off">
+					</td>
+                </tr>
+              </tfoot>
+            </table>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+  </div>
+	
+	
+	<script type="text/javascript">
+												$('input[name=\'ac\']').autocomplete({
+													'source': function(request, response) {
+														$.ajax({
+															url: 'index.php?route=catalog/product/autocomplete&user_token={{ user_token }}&filter_name=' +  encodeURIComponent(request),
+															dataType: 'json',
+															success: function(json) {		
+																response($.map(json, function(item) {
+																	return {
+																		label: item['name'],
+																		value: item['product_id'],
+                                                                        productName: item['name'],
+                                                                        productCode: item['sku'],
+																		product_id: item['product_id']
+																	}
+																}));
+															}
+														});
+													}, 
+													select: function(item) {														
+                                                      
+                                                        html  = '<tr id="filter-row' + filter_row + '">';
+                                                        html += '  <td class="text-right"><input type="text" name="filter[' + filter_row + '][productCode]" value="'+item['productCode']+'" class="form-control" readonly /></td>';
+                                                        html += '  <td class="text-right"><input type="text" name="filter[' + filter_row + '][productName]" value="'+item['productName']+'" class="form-control" readonly /></td>';
+                                                        html += '  <td class="text-right"><input type="text" name="filter[' + filter_row + '][sort_order]" value="0" class="form-control" />';
+                                                        html += '  <input type="hidden" name="filter[{{ filter_row }}][filter_id]" value="{{ filter_id }}"/>';
+                                                        html += '  <input type="hidden" name="filter[{{ filter_row }}][product_id]" value="'+ item['product_id']+'"/>';
+                                                        html += '  </td>';
+                                                        html += '  <td class="text-right"><button type="button" onclick="$(\'#filter-row' + filter_row + '\').remove();" data-toggle="tooltip" title="{{ button_remove }}" class="btn btn-danger"><i class="fa fa-minus-circle"></i></button></td>';
+                                                        html += '</tr>';
+	                                                    $('#filter tbody').append(html);
+	                                                    filter_row++;
+                                                        return false;
+                                                        
+													}
+												});
+	                                        </script>
+	
+	
+	
+  <script type="text/javascript"><!--
+var filter_row = {{ filter_row }};
+
+function addFilterRow() {
+	html  = '<tr id="filter-row' + filter_row + '">';
+    html += '  <td class="text-left" style="width: 70%;"><input type="hidden" name="filter[' + filter_row + '][filter_id]" value="" />';
+	{% for language in languages %}
+	html += '  <div class="input-group">';
+	html += '    <span class="input-group-addon"><img src="language/{{ language.code }}/{{ language.code }}.png" title="{{ language.name }}" /></span><input type="text" name="filter[' + filter_row + '][filter_description][{{ language.language_id }}][name]" value="" placeholder="{{ entry_name }}" class="form-control" />';
+    html += '  </div>';
+	{% endfor %}
+	html += '  </td>';
+	 html += '<td>  </td>';
+	html += '  <td class="text-right"><input type="text" name="filter[' + filter_row + '][sort_order]" value="" placeholder="{{ entry_sort_order }}" id="input-sort-order" class="form-control" /></td>';
+	html += '  <td class="text-right"><button type="button" onclick="$(\'#filter-row' + filter_row + '\').remove();" data-toggle="tooltip" title="{{ button_remove }}" class="btn btn-danger"><i class="fa fa-minus-circle"></i></button></td>';
+	html += '</tr>';
+
+	$('#filter tbody').append(html);
+
+	filter_row++;
+}
+//--></script></div>
+{{ footer }} 
